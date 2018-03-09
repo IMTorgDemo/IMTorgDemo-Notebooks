@@ -1,0 +1,173 @@
+---
+title: "Overview of General and Specific R NLP Libraries"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+
+R has many NLP libraries.  These are enumerated in the [CRAN Task View](https://cran.r-project.org/web/views/NaturalLanguageProcessing.html).  This document will provide a summary and example code from the most basic pre-processing libraries, and libraries that provide specific functionality not found in elsewhere.
+
+
+
+# General frameworks
+
+- TextMining, tm
+  + [package](https://r-forge.r-project.org/projects/tm/)
+  + [doc: Text Mining Infrastructure in R](http://www.jstatsoft.org/v25/i05/)
+- tidytext
+  + [packge](https://github.com/juliasilge/tidytext)
+  + [doc: Text Mining with R a tidy approach](https://www.tidytextmining.com/index.html)
+
+
+
+### TextMining
+
+tm provides a framework for flexible integration of premier statistical methods from R, interfaces to well known open source text mining infrastructure and methods, and has a sophisticated modularized extension mechanism for text mining purposes.
+
+
+
+### TidyText
+
+Tidy data sets allow manipulation with a standard set of “tidy” tools, including popular packages such as dplyr, tidyr, ggplot2.  The package includes functions to tidy() objects (see the broom package [Robinson et al cited above]) from popular text mining R packages such as tm (Ingo Feinerer and Meyer 2008) and quanteda (Benoit and Nulty 2016)
+
+
+
+
+### General Workflow
+
+You can head over to [Kaggle](https://www.kaggle.com/kaggle/hillary-clinton-emails/downloads/hillary-clinton-emails.zip) to download the Hillary email dataset. 
+
+
+```{r}
+pkgs<- c("tm", "stopwords", "textclean", "stringr", "lexicon",
+         "plyr", "RTextTools", "maxent", "e1071", "caret", "tau")
+
+lapply(pkgs, require, character.only =TRUE)
+```
+
+
+```{r}
+library(RSQLite)
+file_path <- paste(getwd(),"/Data/hillary-clinton-emails/database.sqlite",sep='')
+db <- dbConnect(dbDriver("SQLite"), file_path)
+```
+
+```{r}
+emailHillary <- dbGetQuery(db, "SELECT ExtractedBodyText EmailBody FROM Emails e INNER JOIN Persons p ON e.SenderPersonId=P.Id WHERE p.Name='Hillary Clinton'  AND e.ExtractedBodyText != '' ORDER BY RANDOM()")
+dbDisconnect(db)
+```
+
+```{r}
+emailRaw <- paste(emailHillary$EmailBody, collapse=" // ")
+typeof(emailRaw)
+```
+
+```{r}
+# Transform and clean the text
+library("tm")
+docs <- Corpus(VectorSource(emailRaw))
+
+# Convert the text to lower case
+docs <- tm_map(docs, content_transformer(tolower))
+# Remove numbers
+docs <- tm_map(docs, removeNumbers)
+# Remove english common stopwords
+docs <- tm_map(docs, removeWords, stopwords("english"))
+# Remove punctuations
+docs <- tm_map(docs, removePunctuation)
+# Eliminate extra white spaces
+docs <- tm_map(docs, stripWhitespace)
+```
+
+```{r}
+# Text stemming (reduces words to their root form)
+library("SnowballC")
+docs <- tm_map(docs, stemDocument)
+# Remove additional stopwords
+docs <- tm_map(docs, removeWords, c("clintonemailcom", "stategov", "hrod"))
+
+dtm <- TermDocumentMatrix(docs)
+m <- as.matrix(dtm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d <- data.frame(word = names(v),freq=v)
+head(d, 10)
+```
+
+```{r}
+# Generate the WordCloud
+library("wordcloud")
+library("RColorBrewer")
+
+par(bg="grey30")
+png(file="WordCloud.png",width=1000,height=700, bg="grey30")
+wordcloud(d$word, d$freq, col=terrain.colors(length(d$word), alpha=0.9), random.order=FALSE, rot.per=0.3 )
+title(main = "Hillary Clinton's Most Used Words in the Emails", font.main = 1, col.main = "cornsilk3", cex.main = 1.5)
+dev.off()
+```
+
+```{r}
+library("png")
+pp <- readPNG("images/WordCloud.png")
+plot.new()
+rasterImage(pp,0,0,1,1)
+```
+
+
+
+```{r}
+library(RSQLite)
+file_path <- paste(getwd(),"/Data/hillary-clinton-emails/database.sqlite",sep='')
+db <- dbConnect(dbDriver("SQLite"), file_path)
+Emails <- data.frame(dbGetQuery(db,"SELECT * FROM Emails"))
+```
+
+```{r}
+# Sentiment Analysis
+Emails <- data.frame(dbGetQuery(db,"SELECT * FROM Emails"))
+library('syuzhet')
+
+d<-get_nrc_sentiment(Emails$RawText)
+td<-data.frame(t(d))
+ 
+td_new <- data.frame(rowSums(td[2:7945]))
+#The function rowSums computes column sums across rows for each level of a grouping variable.
+ 
+#Transformation and cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td_new2<-td_new[1:8,]
+```
+
+```{r}
+#Visualisation
+library("ggplot2")
+qplot(sentiment, data=td_new2, weight=count, geom="bar",fill=sentiment)+ggtitle("Email sentiments")
+```
+
+```{r}
+# N-grams
+library(tm)
+library(RSQLite)
+library(quanteda)
+ 
+# Get all the emails sent by Hillary
+emailHillary <- dbGetQuery(db, "SELECT ExtractedBodyText EmailBody FROM Emails e INNER JOIN Persons p ON e.SenderPersonId=P.Id WHERE p.Name='Hillary Clinton' AND e.ExtractedBodyText != '' ORDER BY RANDOM()")
+emails <- paste(emailHillary$EmailBody, collapse=" // ")
+
+#Remove stopwords
+textstat_collocations(emails, size = 2:3)
+#print(removeFeatures(textstat_collocations(emails, size = 2:3), stopwords("english")))    #deprecated
+print(textstat_collocations(emails, size = 2:3))
+```
+
+
+
+
+# Specific Frameworks
+
+- SnowballC, text stemming library
+- Wordcloud, for making wordcloud visualizations
+- Syuzhet, text sentiment analysis
+- quanteda, N-grams
+
