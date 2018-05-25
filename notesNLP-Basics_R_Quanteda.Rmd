@@ -1,0 +1,239 @@
+---
+title: "Notes on Quanteda's NLP Workflow"
+author: "Jason Beach"
+date: "17 April 2017"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+---
+
+
+
+
+  
+# Packages  
+  
+Quanteda provides functionality for a fast and reasonable workflow on text documents.  Working with other text analysis packages quanteda is hardly unique in providing facilities for working with text – the excellent tm package already provides many of the features we have described. quanteda is designed to complement those packages, as well to simplify the implementation of the text-to-analysis workflow. quanteda corpus structures are simpler objects than in tms, as are the document-feature matrix objects from quanteda, compared to the sparse matrix implementation found in tm. However, there is no need to choose only one package, since we provide translator functions from one matrix or corpus object to the other in quanteda.
+
+Once constructed, a quanteda "dfm" can be easily passed to other text-analysis packages for additional analysis of topic models or scaling, such as:
+
+* topic models (including converters for direct use with the topicmodels, LDA, and stm packages)
+* document scaling (using quanteda’s own functions for the "wordfish" and "Wordscores" models, direct use with the ca package for correspondence analysis, or scaling with the austin package)
+* document classification methods, using (for example) Naive Bayes, k-nearest neighbour, or Support Vector Machines
+* more sophisticated machine learning through a variety of other packages that take matrix or matrix-like inputs.
+* graphical analysis, including word clouds and strip plots for selected themes or words.
+ 
+
+```{r eval=FALSE, include=FALSE}
+options(max.print=100)
+options(nwarnings = 5)
+```
+
+```{r eval=FALSE, include=FALSE}
+### External
+install.packages("readtext")    # data preparation
+install.packages("stringi")     # data preparation
+install.packages("quanteda")    # data preparation and analysis
+install.packages("topicmodels") # analysis
+install.packages("spacyr")      # advanced topics
+install.packages("corpustools") # advanced topics
+```
+
+```{r echo=FALSE}
+### Constants
+dir_root = "/home/rstudio/Working/machine-learning-analytics"
+dir_shared = "/classifiers/sup_functions"
+dir_category = "/classifiers/category_classifier"
+```
+
+```{r eval=FALSE, include=FALSE}
+### Internal & dependencies
+install.packages('textclean')
+install.packages('stopwords')
+install.packages('lexicon')
+
+install.packages('tidyr')
+install.packages('here')
+devtools::install_github("vqv/ggbiplot")
+```
+
+
+
+# Basic
+
+```{r eval = FALSE}
+# Utility functions
+texts(corpus)   #Show texts of a corpus
+ndoc(corpus/dfm/tokens)  #Count documents/features
+nfeat(corpus/dfm/tokens)  #Count features
+summary(corpus/dfm)  #Print summary
+head(corpus/dfm)  #Return first part
+tail(corpus/dfm)  #Return last part
+```
+
+# Corpus 
+
+```{r}
+# basic text
+docs <- c(d1 = "One two three. Four five six.", d2 = "Two three four. Seven eight nine.", d3 = "One three four. Eight nine ten. Ten eleven twelve thirteen.")
+# create corpus with document-level variables
+corp <- quanteda::corpus(docs, docvars = data.frame(grp = c(1, 1, 2)))
+corp
+typeof(corp)
+# get text from document
+(txt <- quanteda::texts(corp)[2])
+typeof(txt)
+```
+
+Basic summary with corpus
+```{r}
+# basic
+(summ <- summary(corp, n=5) )
+typeof(summ)
+head( summary(corp, showmeta = TRUE) )
+# number of documents
+quanteda::ndoc(corp)
+```
+
+Document-level variables
+```{r}
+# Extract or add document level variables
+group <- quanteda::docvars(corp, "grp")
+quanteda::docvars(corp, "serial_number") <- c( 1:quanteda::ndoc(corp) )
+# document variables
+head(quanteda::docvars(corp))
+# inspect document-level metadata
+quanteda::docvars(corp)
+# inspect corpus-level metadata
+quanteda::metacorpus(corp)
+```
+
+Operations with corpus
+```{r}
+# subset on docvar
+quanteda::corpus_subset(corp, quanteda::docvars(corp)$grp == 2)
+# group counts
+summary( factor(quanteda::docvars(corp)$grp) )
+
+# change rows (unit of texts) to sentences 
+sent_corp <- quanteda::corpus_reshape(corp, 'sentences')    # c("sentences", "paragraphs")
+sent_corp
+# restore to original documents
+quanteda::corpus_reshape(sent_corp, 'documents')
+# change units of a corpus
+quanteda::corpus_reshape(corp, to = "paragraphs")
+
+# separate documents
+txt1 <- quanteda::corpus(corp[1:2], note="First two docs")
+txt2 <- quanteda::corpus(corp[3], note="Last doc")
+summary(txt1); summary(txt2)
+# concatenate documents
+mydocs <- txt1 + txt2
+summary(mydocs)
+```
+
+Useful functions
+```{r}
+# segment texts on a pattern match
+#quanteda::corpus_segment(corp, pattern, valuetype, extract_pattern= TRUE)
+# take a random sample of corpus texts
+quanteda::corpus_sample(corp, size = 2, replace = FALSE)
+```
+
+Working on unit of texts
+```{r}
+summary(sent_corp)
+# only keep sentences with more than 5 tokens
+long_sent_corp <- quanteda::corpus_subset(sent_corp, quanteda::ntoken(sent_corp) >= 5)
+long_sent_corp
+```
+
+Exploring corpus text
+```{r}
+# key-word-in-context
+quanteda::kwic(corp,"three")
+quanteda::kwic(corp,"three", wholeword=TRUE)
+# use glob
+quanteda::kwic(corp,"th*", wholeword=TRUE)
+```
+
+
+
+# Document Feature Matrix
+
+```{r}
+dfm <- quanteda::dfm(corp)
+
+quanteda::is.dfm(dfm)
+typeof(dfm)
+
+dfm[,1:5]
+quanteda::topfeatures(dfm, 20)
+```
+
+```{r fig.width = 6}
+plot(dfm)
+#plot(dfm, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))   # why is it not working???
+```
+
+```{r}
+# grouping effects the number of documents
+dfm <- quanteda::dfm(corp, groups = "grp")
+dfm <- quanteda::dfm(corp, groups = quanteda::docvars(corp, "grp"))
+dfm <- quanteda::dfm(corp, groups = c(1,1,2))
+
+dfm
+```
+
+```{r}
+# works for simple tokens
+dfm <- quanteda::dfm(quanteda::tokens(docs), groups = c(1, 1, 2))
+dfm
+```
+
+```{r}
+# supporting function
+dfm_param <- function(sCORPUS){
+  dtm <- quanteda::dfm(sCORPUS,
+             groups = quanteda::docvars(sCORPUS)$Group,
+             tolower = TRUE, stem = TRUE,              # set lowercasing and stemming to TRUE
+             remove_punct = TRUE,
+             remove_numbers = TRUE,
+             remove_separators = TRUE,
+             remove = quanteda::stopwords("english"))  # provide the stopwords for deletion
+  return(dtm)
+}
+```
+
+```{r eval = FALSE}
+# create dictionary
+myDict <- quanteda::dictionary(list(terror = c("terrorism", "terrorists", "threat"),
+                          economy = c("jobs", "business", "grow", "work")))
+# use dictionary
+byPresMat <- quanteda::dfm(recentCorpus, dictionary = myDict)
+# apply dictionary to current dfm
+quanteda::dfm_lookup(recentCorpus, dictionary = myDict)
+dfm_compress()
+dfm_sample()
+# weight or smooth feature frequencies
+dfm_weight()
+dfm_smooth()
+# sort
+dfm_sort()
+dfm_group()
+# combine
+dfm_compress()
+# create feature co-occurent
+fcm()
+```
+
+# References
+
+* [cheatsheet](https://muellerstefan.net/files/quanteda-cheatsheet.pdf)
+* [quick start](https://github.com/kasperwelbers/text_analysis_in_R/blob/master/files/Text_Analysis_in_R.Rmd)
+* [quick start](http://docs.quanteda.io/articles/pkgdown/quickstart.html#constructing-a-document-feature-matrix)
+* [summary of functionality](https://mran.microsoft.com/snapshot/2015-08-20/web/packages/quanteda/vignettes/quickstart.html)
+* [documentation book](https://tutorials.quanteda.io/basic-operations/corpus/corpus_subset/)
+* [courses](https://github.com/kbenoit/kbenoit.github.io/tree/master/assets/courses/tcd2018qta)
+
