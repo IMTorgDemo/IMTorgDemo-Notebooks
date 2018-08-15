@@ -1,0 +1,22 @@
+﻿Product_Cat,Exploit_Cat
+Security Information and Event Management,(any)
+Training,(any)
+Compliance Reporting,(any)
+Incident Response,(any)
+Threat Intelligence,(any)
+Encrypted Storage,data (firm or customer)
+Data Leak Prevention,data (firm or customer)
+Backup,data (firm or customer)
+Traffic Analysis,denial of service
+Access Control,local and privilege execution
+Email Filter,local and privilege execution
+Virtual Private Network,local and privilege execution
+Antimalware,remote
+Patch Management,remote
+Host-Based Intrusion Prevention System,remote
+Network Intrusion Prevention System,remote
+Vulnerability Assessment,remote
+Web Services Security,web and external application 
+Forensics,web and external application 
+Secure Managed File Transfer,web and external application 
+Mobile Data Security,web and external application 

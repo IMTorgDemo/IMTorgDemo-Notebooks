@@ -1,0 +1,267 @@
+---
+title: "Functional Programming in R"
+output: html_notebook
+---
+
+
+
+# Introduction
+
+“To understand computations in R, two slogans are helpful:
+
+        Everything that exists is an object.
+        Everything that happens is a function call."
+
+    — John Chambers
+
+
+```{r}
+install.packages("pryr")
+```
+
+
+
+
+
+# Functions
+
+R has two types of scoping: lexical scoping, implemented automatically at the language level, and dynamic scoping, used in select functions to save typing during interactive analysis. We discuss lexical scoping here because it is intimately tied to function creation. Dynamic scoping is described in more detail in scoping issues.
+
+scoping allows you to:
+
+* build tools by composing functions, as described in functional programming.
+* overrule the usual evaluation rules and do non-standard evaluation, as described in non-standard evaluation
+
+Lexical scoping looks up symbol values based on how functions were nested when they were created, not how they are nested when they are called. With lexical scoping, you don’t need to know how the function is called to figure out where the value of a variable will be looked up. You just need to look at the function’s definition.
+
+four basic principles behind R’s implementation of lexical scoping:
+
+* name masking - if a name isn’t defined inside a function, R will look one level up
+* functions vs. variables - finding functions works exactly the same way as finding variables; if you are using a name in a context where it’s obvious that you want a function (e.g., `f(3)`), R will ignore objects that are not functions while it is searching
+* a fresh start - every time a function is called, a new environment is created to host execution (check with `exists(x)` ); we’ll see some ways to get around this in mutable state
+* dynamic lookup - R looks for values when the function is run, not when it’s created; `codetools::findGlobals(f)` function lists all the external dependencies of a function; make sure there are none
+
+
+__Closure__
+
+Closures work because k preserves the environment in which it was defined and because the environment includes the value of y. Environments gives some pointers on how you can dive in and figure out what values are stored in the [environment](http://adv-r.had.co.nz/Environments.html#environments) associated with each function.
+
+```{r}
+j <- function(x) {
+  y <- 2
+  function() {
+    c(x, y)
+  }
+}
+k <- j(1)
+k()
+environment(j)
+rm(j, k)
+```
+
+The globalenv(), or global environment, is the interactive workspace. This is the environment in which you normally work. The parent of the global environment is the last package that you attached with library() or require().
+
+* The baseenv(), or base environment, is the environment of the base package. Its parent is the empty environment.
+* The emptyenv(), or empty environment, is the ultimate ancestor of all environments, and the only environment without a parent.
+* The environment() is the current environment.
+
+The following commands are useful for working with functions.
+
+```{r}
+f = function(x){x+1}
+
+formals(f)
+body(f)
+environment(f)
+as.list(environment(f))
+
+```
+
+
+
+
+
+# Functional Programming
+
+three building blocks of functional programming: 
+
+* anonymous functions - functions are objects in their own right. They aren’t automatically bound to a name
+* closures (functions written by functions) - Closures get their name because they enclose the environment of the parent function and can access all its variables. This is useful because it allows us to have two levels of parameters: a parent level that controls operation and a child level that does the work. 
+* lists of functions - implement them at the same time
+
+
+important concepts include:
+
+* functionals - functions that take functions as arguments and return vectors as output
+* function operators - functions that take functions as input and return them as output
+
+# Anonymous functions
+
+```{r}
+# With appropriate parenthesis, the function is called with parameter
+(function(x) 3)(2)
+```
+
+
+# Closures
+
+__Basics__
+
+The parent environment of a closure is the execution environment of the function that created it.  The execution environment normally disappears after the function returns a value. However, functions (closures) capture their enclosing environments. This means when function a returns function b, function b captures and stores the execution environment of function a, and it doesn’t disappear. (This has important consequences for memory use, see [memory usage](http://adv-r.had.co.nz/memory.html#gc) for details.)
+
+In R, almost every function is a closure. All functions remember the environment in which they were created, typically either the global environment, if it’s a function that you’ve written, or a package environment, if it’s a function that someone else has written. The only exception is primitive functions, which call C code directly and don’t have an associated environment. 
+
+```{r}
+power <- function(exponent){
+  print(environment())
+  function(x){
+    x^exponent
+  }
+}
+
+square = power(2)
+print(square(2))
+cat("\n")
+cube = power(3)
+print(cube(3))
+```
+
+The function itself doesn’t change. The difference is the enclosing environment, environment(square). One way to see the contents of the environment is to convert it to a list
+
+```{r}
+power
+```
+
+```{r}
+as.environment(power)
+```
+
+```{r}
+print("square: ")
+square
+cat("\n")
+print("cube: ")
+cube
+```
+
+```{r}
+as.list(environment(square))
+as.list(environment(cube))
+```
+
+```{r}
+pryr::unenclose(square)
+```
+
+__Function factories__
+
+You call it with arguments that describe the desired actions, and it returns a function that will do the work for you. For `power()`, there’s not much benefit in using a function factory instead of a single function with multiple arguments. Function factories are most useful when:
+
+* The different levels are more complex, with multiple arguments and complicated bodies
+* Some work only needs to be done once, when the function is generated
+* particularly well-suited to maximum likelihood estimation, and other areas of [mathematical functionals](http://adv-r.had.co.nz/Functionals.html#functionals-math)
+
+
+
+__Mutable state__
+
+execution environment is refreshed every time, the enclosing environment is constant.
+
+Together, a static parent environment and <<- make it possible to maintain state across function calls. The following example shows a counter that records how many times a function has been called. 
+
+```{r}
+new_counter <- function() {
+  i <- 0
+  function() {
+    i <<- i + 1
+    i
+  }
+}
+
+cntr <- new_counter()
+```
+
+The new function is a closure, and its enclosing environment is the environment created when `new_counter()` is run.  Ordinarily, function execution environments are temporary, but a closure maintains access to the environment in which it was created.  The counters get around the “fresh start” limitation by not modifying variables in their local environment. Since the changes are made in the unchanging parent (or enclosing) environment, they are preserved across function calls.   
+
+```{r}
+print(cntr())
+print(cntr())
+```
+
+```{r}
+i <- 0
+new_counter2 <- function() {
+  i <<- i + 1
+  i
+}
+new_counter3 <- function() {
+  i <- 0
+  function() {
+    i <- i + 1
+    i
+  }
+}
+```
+
+Notice you can't crete a new cntr
+
+```{r}
+# modify parent environment is possible
+print(new_counter2())
+print(new_counter2())
+```
+```{r}
+# not possible to modify parent environment
+print(new_counter3()())
+print(new_counter3()())
+```
+
+# Lists of functions
+
+Lists of functions are similar to the `summary()` function - all are executed at once.
+
+```{r}
+compute_mean <- list(
+  base = function(x) mean(x),
+  sum = function(x) sum(x) / length(x),
+  manual = function(x) {
+    total <- 0
+    n <- length(x)
+    for (i in seq_along(x)) {
+      total <- total + x[i] / n
+    }
+    total
+  }
+)
+```
+
+```{r}
+# example run
+x <- runif(1e5)
+system.time(compute_mean$base(x))
+```
+
+```{r}
+# run all using anonymous function
+lapply(compute_mean, function(f){f(x)})
+# assigning to variable
+call_fun <- function(f, ...) f(...)
+lapply(compute_mean, call_fun, x)
+```
+
+
+
+
+
+
+# Functionals
+
+[Left off here](http://adv-r.had.co.nz/Functionals.html)
+
+
+
+
+# Function Operators
+
+
+

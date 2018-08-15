@@ -1,0 +1,275 @@
+---
+title: "Processing and Analysis of the Veris Community Database"
+output: html_notebook
+---
+
+# Introduction
+
+The Veris Community Database is a compendium of cybersecurity incidents and breaches across multiple industries.  The [verizon github organization](https://github.com/vz-risk) contains multiple repos of supporting tools and scripts for working with the database, including the [verisr R library](https://github.com/vz-risk/verisr).
+
+This notebook will summarize and describe the data, as well as produce basic tables and graphs, to enable a quick introduction to its strengths and weaknesses.  Future work can include an exploration using [scripts the verizon team produced](https://github.com/vz-risk/veris_scripts).
+
+
+
+
+
+
+# Config
+
+VCDB is a fairly large (wide) dataset, at 7833 records and 2397 variables.  It takes a big machine to parse the json data.  I could not do it with a RAM of 16 GB 2133 MHz LPDDR3.  Therefore, I used the .csv file of pre-compiled json.  This is unfortunate because I could not use the `json2veris` function which would create the `veris, data.table` object, which has nice convenience functions.  This notebook will work around the problem.
+
+```{r eval = FALSE}
+devtools::install_github("jayjacobs/verisr")
+install.packages("pryr")
+install.packages("tidyr")
+```
+
+```{r}
+options(warn=-1)
+
+library(verisr)
+
+OUTPUT.DIR <- "/home/rstudio/Working/VCDB/OUTPUT/"
+```
+
+```{r eval = FALSE}
+# doesn't work for me
+vcdb.dir <- "/home/rstudio/Working/VCDB/data/json/"
+# may optionally load a custom json schema file.
+if (interactive()) { # show progress bar if the session is interactive
+  vcdb <- verisr::json2veris(vcdb.dir, progressbar=TRUE)
+} else {
+  vcdb <- verisr::json2veris(vcdb.dir)  
+}
+```
+
+```{r eval = FALSE}
+# doesn't work for me
+vcdb.dir <- "/home/rstudio/Working/VCDB/data/joined/"
+vcdb <- verisr::json2veris(vcdb.dir)  
+```
+
+```{r}
+vcdb.dir <- "/home/rstudio/Working/VCDB/data/csv/"
+input <- paste(vcdb.dir, "vcdb.csv", sep="")
+vcdb <- data.table::fread(input)
+```
+
+```{r}
+dim(vcdb)
+```
+
+
+Display names in a separate file.  This is the easiest way to get acquianted with the data because there are so many fields.  Once you understand the basic grouping structure, the names are intuitive.
+
+```{r}
+names.dir <- OUTPUT.DIR
+output.file <- "colnames.csv"
+nm <- colnames(vcdb)
+write.csv(nm, paste(names.dir, output.file, sep=""))
+```
+
+
+
+
+
+
+# Characteristics
+
+The original columns are simple binary (`TRUE / FALSE`) variables that describe the event.  This makes for an increadibly sparse dataset.  However, the `getenum` command supports exploring the various factors much less tedious by grouping across column names.
+
+In addition, derived fields exist, such as 'victim.industry.name', that are not binary; rather, they are categorical with each value containing a character category. 
+
+```{r}
+# from function summary.verisr
+  # attacker origin
+actor <- getenum(vcdb, "actor", add.freq=T)
+  # incident type
+action <- getenum(vcdb, "action", add.freq=T)
+  # attacked
+asset <- getenum(vcdb, "asset.variety", add.freq=T)
+  # top level asset categories
+attribute <- getenum(vcdb, "attribute", add.freq=T)
+```
+
+
+
+```{r}
+# grouped columns
+action
+```
+
+
+```{r}
+# table with multiple fields
+a2 <- getenum(vcdb, c("pattern", "victim.orgsize", "victim.industry2"))
+a2
+
+```
+
+
+```{r}
+# single enum, within column group (add the .variety suffix)
+ext.variety <- verisr::getenum(vcdb, "actor.external.variety")
+print(ext.variety)
+```
+
+```{r}
+# data table column: category within enum
+head(vcdb$'actor.internal.motive.Financial')
+```
+
+
+
+
+
+
+# Process Incident Table
+
+This process creates a reference table for other applications.
+
+```{r}
+victim <- getenum(vcdb, "victim.industry.name", add.freq=T)
+pattern <- getenum(vcdb, "pattern", add.freq=T)
+orgsize <- getenum(vcdb, "victim.orgsize", add.freq=T)
+```
+
+```{r}
+victim
+
+names.dir <- OUTPUT.DIR
+output.file <- "vcdbIndustryNames.csv"
+write.csv(victim, row.names=FALSE, paste(names.dir, output.file, sep=""))
+```
+
+```{r}
+YEAR = 2017
+
+incident_or_breach <- c( expression(TRUE), expression( vcdb$attribute.confidentiality.data_disclosure.Yes==TRUE ) )
+year <- c( expression(TRUE), expression( vcdb$timeline.incident.year%in%YEAR))
+orgsize <- c( expression(TRUE) , expression( vcdb$victim.orgsize.Large==TRUE ),  expression( vcdb$victim.orgsize.Small==TRUE ))
+```
+
+```{r}
+# Incident-2017-SmallOrg
+tmp_1 <- vcdb[eval(incident_or_breach[1]) & eval(year[2]) & eval(orgsize[3]),]
+
+tmp_2 <- tmp_1 %>%
+    dplyr::group_by(victim.industry.name) %>%
+    dplyr::count(pattern) %>%
+    dplyr::mutate(freq = n / sum(n)) %>%
+    dplyr::ungroup() %>%
+    tidyr::complete(victim.industry.name, pattern, fill = list(n = 0))
+
+colnames(tmp_2)[colnames(tmp_2) %in% c('n', 'freq')] <- c("n-Small", "freq-Small")
+
+incident_smallorg_2017 <- tmp_2
+```
+
+```{r}
+# Incident-2017-LargeOrg
+tmp_1 <- vcdb[eval(incident_or_breach[1]) & eval(year[2]) & eval(orgsize[2]),]
+
+tmp_2 <- tmp_1 %>%
+    dplyr::group_by(victim.industry.name) %>%
+    dplyr::count(pattern) %>%
+    dplyr::mutate(freq = n / sum(n)) %>%
+    dplyr::ungroup() %>%
+    tidyr::complete(victim.industry.name, pattern, fill = list(n = 0))
+
+colnames(tmp_2)[colnames(tmp_2) %in% c('n', 'freq')] <- c("n-Big", "freq-Big")
+
+incident_largeorg_2017 <- tmp_2
+```
+
+```{r}
+# Incident-2017-AllOrgSizes
+tmp_1 <- vcdb[eval(incident_or_breach[1]) & eval(year[1]) & eval(orgsize[1]),]
+
+tmp_2 <- tmp_1 %>%
+    dplyr::group_by(victim.industry.name) %>%
+    dplyr::count(pattern) %>%
+    dplyr::mutate(freq = n / sum(n)) %>%
+    dplyr::ungroup() %>%
+    tidyr::complete(victim.industry.name, pattern, fill = list(n = 0))
+
+colnames(tmp_2)[colnames(tmp_2) %in% c('n', 'freq')] <- c("n-All", "freq-All")
+
+incident_allorg_allyear <- tmp_2
+```
+
+```{r}
+# combine data
+drops <- c("OrgSize")
+incident_smallorg_2017 <- incident_smallorg_2017[ , !(names(incident_smallorg_2017) %in% drops)]
+incident_largeorg_2017 <- incident_largeorg_2017[ , !(names(incident_largeorg_2017) %in% drops)]
+incident_allorg_allyear <- incident_allorg_allyear[ , !(names(incident_allorg_allyear) %in% drops)]
+
+tmp_1 = merge(incident_smallorg_2017, incident_largeorg_2017, by=c("victim.industry.name", "pattern"), all=TRUE)
+tmp_2 = merge(tmp_1, incident_allorg_allyear, by=c("victim.industry.name", "pattern"), all=TRUE)
+incident_comborg_2017 <- tmp_2
+
+nm <- colnames(incident_comborg_2017)
+colnames(incident_comborg_2017)[nm %in% c('victim.industry.name','pattern')] <- c('Industry', 'Cause_Ref_Specific')
+
+incident_comborg_2017[is.na(incident_comborg_2017)==TRUE] <- 0
+
+names.dir <- OUTPUT.DIR
+output.file <- "dataIncident_comborg_2017.csv"
+write.csv(incident_comborg_2017, row.names=FALSE, paste(names.dir, output.file, sep=""))
+```
+
+
+
+
+
+
+
+
+
+
+# Graphs
+
+```{r}
+vcdb %>%
+    dplyr::group_by(attribute.confidentiality.data_disclosure.Yes) %>%
+    dplyr::count(timeline.incident.year) %>%
+    dplyr::ungroup() %>%
+    dplyr::rename(breach = attribute.confidentiality.data_disclosure.Yes) %>%
+    dplyr::mutate(breach = ifelse(breach, "Breach", "Incident")) %>%
+  ggplot2::ggplot() + 
+    ggplot2::geom_bar(ggplot2::aes(x=timeline.incident.year, y=n, group=breach, fill=breach), stat="identity") + 
+    ggplot2::labs(title="VCDB Breaches and Incidents by Incident Year", y="Count", x="Year") +
+    ggplot2::scale_x_continuous(expand=c(0,0), limits=c(2003, 2018)) +
+    ggplot2::scale_y_continuous(expand=c(0,0)) +
+    ggplot2::scale_fill_brewer() +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+        panel.grid.major.x = ggplot2::element_blank(),
+        panel.grid.minor.x = ggplot2::element_blank(),
+        panel.grid.minor.y = ggplot2::element_blank()
+    )
+```
+
+```{r}
+library(dplyr)
+library(stringr)
+```
+
+```{r}
+vcdb %>%
+    verisr::getenum(c("action","asset.variety")) %>%
+    dplyr::filter(!is.na(n)) %>%
+    dplyr::mutate(by = stringr::str_sub(by, 15)) %>%
+  ggplot2::ggplot() +
+    ggplot2::geom_tile(ggplot2::aes(x=enum, y=by, fill=x)) +
+    ggplot2::geom_text(ggplot2::aes(x=enum, y=by, label=x)) +
+    ggplot2::scale_fill_gradient2() +
+    ggplot2::theme_void() +
+    ggplot2::theme(
+        axis.text = ggplot2::element_text(),
+        axis.text.x = ggplot2::element_text(hjust=1, angle=90)
+    )
+```
+
+

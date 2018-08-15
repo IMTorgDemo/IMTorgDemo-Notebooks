@@ -1,0 +1,12 @@
+﻿Year,Country,Industry,Sample_Count,Firm_Count_US,Breach_pct,Records_pct,Breach_Discovery_Method,Cause_Pct,Cause_Cnt,Cause_Cnt_Total,Cause_Ref_Specific,Exploit_Category,partition,Cause_Breach,Cause_Cost,ProdCat_Basic,ProdCat_Bal,ProdCat_Adv,Cost,Source
+2014,US,Finance,856,"6,799",,,,0.27,231,0.033975585,Web App Attack,web and external application ,0,Web,Data,"Web Services Security, Backup ","Patch Management, Host-Based Intrusion Prevention System, Encrypted Storage, Data Leak Prevention",,,verizondbir2014frequencyofincidentsperindustry.png
+2014,US,Finance,856,"6,799",,,,0.26,223,0.032798941,Denial Of Service,denial of service,0,Denial Of Service,Denial Of Service,Secure Managed File Transfer,"Security Information and Event Management, Training, Compliance Reporting",,,verizondbir2014frequencyofincidentsperindustry.png
+2014,US,Finance,856,"6,799",,,,0.22,188,0.027651125,Payment Card Skimmer,web and external application ,0,Web,Web,Web Services Security,,,,verizondbir2014frequencyofincidentsperindustry.png
+2014,US,Finance,856,"6,799",,,,0.07,60,0.008824827,Insider Misuse,local and privilege execution,0,Local,Data,"Access Control, Email Filter, Backup",,,,verizondbir2014frequencyofincidentsperindustry.png
+2014,US,Finance,856,"6,799",,,,0.06,51,0.007501103,Other,(any),0,(any),(any),Secure Managed File Transfer,,,,verizondbir2014frequencyofincidentsperindustry.png
+2014,US,Finance,856,"6,799",,,,0.05,43,0.006324459,Misc Error,local and privilege execution,0,Local ,Data,"Access Control, Email Filter, Backup",,,,verizondbir2014frequencyofincidentsperindustry.png
+2014,US,Finance,856,"6,799",,,,0.04,34,0.005000735,Crime-ware,remote,0,Local,Remote,"Access Control, Email Filter, Antimalware",,,,verizondbir2014frequencyofincidentsperindustry.png
+2014,US,Finance,856,"6,799",,,,0.03,26,0.003824092,Theft / Loss,local and privilege execution,0,Local,Data,"Access Control, Email Filter, Backup",,,,verizondbir2014frequencyofincidentsperindustry.png
+2014,US,Finance,856,"6,799",,,,0.001,1,0.00014708,POS Intrusion,web and external application ,0,Web,Web,Web Services Security,,,,verizondbir2014frequencyofincidentsperindustry.png
+2014,US,Finance,856,"6,799",,,,0.001,1,0.00014708,Cyber Espionage,remote,0,Local,Remote,"Access Control, Email Filter, Antimalware",,,,verizondbir2014frequencyofincidentsperindustry.png
+2014,US,Finance,856,"6,799",,,,0,"5,941",0.873804971,(no incident),(no incident),0,(no incident),(no incident),,,,,
