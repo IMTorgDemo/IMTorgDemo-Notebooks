@@ -1,0 +1,164 @@
+{
+    "blogdown::insert_image_addin" : {
+        "binding" : "insert_image_addin",
+        "description" : "Insert an external image into a blog post.",
+        "interactive" : true,
+        "name" : "Insert Image",
+        "ordinal" : 4,
+        "package" : "blogdown",
+        "title" : ""
+    },
+    "blogdown::new_post_addin" : {
+        "binding" : "new_post_addin",
+        "description" : "Create a new post with blogdown::new_post().",
+        "interactive" : true,
+        "name" : "New Post",
+        "ordinal" : 2,
+        "package" : "blogdown",
+        "title" : ""
+    },
+    "blogdown::quote_poem_addin" : {
+        "binding" : "quote_poem_addin",
+        "description" : "Add > to the beginning of selected paragraphs and two trailing spaces to selected lines.",
+        "interactive" : false,
+        "name" : "Quote Poem",
+        "ordinal" : 6,
+        "package" : "blogdown",
+        "title" : ""
+    },
+    "blogdown::serve_site" : {
+        "binding" : "serve_site",
+        "description" : "Run blogdown::serve_site() to live preview a website locally.",
+        "interactive" : true,
+        "name" : "Serve Site",
+        "ordinal" : 1,
+        "package" : "blogdown",
+        "title" : ""
+    },
+    "blogdown::touch_file" : {
+        "binding" : "touch_file",
+        "description" : "Change the timestamp of the current file in the editor.",
+        "interactive" : false,
+        "name" : "Touch File",
+        "ordinal" : 5,
+        "package" : "blogdown",
+        "title" : ""
+    },
+    "blogdown::update_meta_addin" : {
+        "binding" : "update_meta_addin",
+        "description" : "Update the title, author, date, categories, and tags of the current blog post.",
+        "interactive" : true,
+        "name" : "Update Metadata",
+        "ordinal" : 3,
+        "package" : "blogdown",
+        "title" : ""
+    },
+    "bookdown::mathquill" : {
+        "binding" : "mathquill",
+        "description" : "Input math expressions via the MathQuill library.",
+        "interactive" : true,
+        "name" : "Input LaTeX Math",
+        "ordinal" : 15,
+        "package" : "bookdown",
+        "title" : ""
+    },
+    "bookdown::serve_book" : {
+        "binding" : "serve_book",
+        "description" : "Run bookdown::serve_book() to live preview a book.",
+        "interactive" : true,
+        "name" : "Preview Book",
+        "ordinal" : 14,
+        "package" : "bookdown",
+        "title" : ""
+    },
+    "clipr::clipr_output" : {
+        "binding" : "clipr_output",
+        "description" : "Copies the console output of a selected expression to the system clipboard",
+        "interactive" : false,
+        "name" : "Output to clipboard",
+        "ordinal" : 8,
+        "package" : "clipr",
+        "title" : ""
+    },
+    "clipr::clipr_result" : {
+        "binding" : "clipr_result",
+        "description" : "Copies the results of a selected expression to the system clipboard",
+        "interactive" : false,
+        "name" : "Value to clipboard",
+        "ordinal" : 7,
+        "package" : "clipr",
+        "title" : ""
+    },
+    "covr::addin_report" : {
+        "binding" : "addin_report",
+        "description" : "Calculates the package test coverage and opens a report, using `covr::report()`",
+        "interactive" : false,
+        "name" : "Calculate package test coverage",
+        "ordinal" : 12,
+        "package" : "covr",
+        "title" : ""
+    },
+    "devtools::test_coverage" : {
+        "binding" : "test_coverage",
+        "description" : "Calculate and report the test coverage for the current package, using `devtools::test_coverage()`.",
+        "interactive" : false,
+        "name" : "Report test coverage for a package",
+        "ordinal" : 11,
+        "package" : "devtools",
+        "title" : ""
+    },
+    "devtools::test_coverage_file" : {
+        "binding" : "test_coverage_file",
+        "description" : "Calculate and report test coverage for the current test file, using `devtools::test_coverage_file()`.",
+        "interactive" : false,
+        "name" : "Report test coverage for a file",
+        "ordinal" : 10,
+        "package" : "devtools",
+        "title" : ""
+    },
+    "devtools::test_file" : {
+        "binding" : "test_file",
+        "description" : "Run the current test file, using `devtools::test_file()`.",
+        "interactive" : false,
+        "name" : "Run a test file",
+        "ordinal" : 9,
+        "package" : "devtools",
+        "title" : ""
+    },
+    "pkgdown::build_site_external" : {
+        "binding" : "build_site_external",
+        "description" : "Runs pkgdown on the current package",
+        "interactive" : true,
+        "name" : "Build pkgdown",
+        "ordinal" : 16,
+        "package" : "pkgdown",
+        "title" : ""
+    },
+    "reprex::reprex_addin" : {
+        "binding" : "reprex_addin",
+        "description" : "Run `reprex::reprex()` to prepare a reproducible example for sharing.",
+        "interactive" : true,
+        "name" : "Render reprex...",
+        "ordinal" : 17,
+        "package" : "reprex",
+        "title" : ""
+    },
+    "reprex::reprex_selection" : {
+        "binding" : "reprex_selection",
+        "description" : "Prepare reprex from current selection",
+        "interactive" : false,
+        "name" : "Reprex selection",
+        "ordinal" : 18,
+        "package" : "reprex",
+        "title" : ""
+    },
+    "testit::insert_identical" : {
+        "binding" : "insert_identical",
+        "description" : "Insert the infix operator %==% from testit.",
+        "interactive" : false,
+        "name" : "Insert %==%",
+        "ordinal" : 13,
+        "package" : "testit",
+        "title" : ""
+    }
+}
