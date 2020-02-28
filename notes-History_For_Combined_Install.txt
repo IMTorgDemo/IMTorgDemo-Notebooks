@@ -1,0 +1,133 @@
+
+# Install History for Building Combined Docker
+
+
+
+
+#PROBABLY NOT NECESSARY    
+#conda update -y -n base conda
+#conda install -y openjdk=8.0.121 notebook>=5.7.6 tornado>6 ipywidgets>=7.5.1 nodejs pandas maven py4j requests pyspark bottle    #from configuration.yml
+
+
+
+#START HERE
+
+apt update
+apt-get install -y gnupg2
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+apt update && apt install -y yarn
+
+mkdir tmp
+cd tmp
+git clone https://github.com/twosigma/beakerx.git
+cd beakerx/beakerx
+pip install -r requirements.txt --verbose
+pip install beakerx
+beakerx install
+jupyter nbextension enable beakerx --py --sys-prefix
+jupyter labextension install @jupyter-widgets/jupyterlab-manager
+(cd js/lab; jupyter labextension install . --no-build)
+(cd js/lab-theme-dark; jupyter labextension install . --no-build)
+(cd js/lab-theme-light; jupyter labextension install . --no-build)
+jupyter lab build
+exit
+
+
+jupyter notebook list
+
+
+
+
+
+
+
+HISTORY - THIS WORKED!!!
+
+    6  mkdir tmp
+    7  cd tmp
+    8  git clone https://github.com/twosigma/beakerx.git
+    9  nano beakerx/configuration.yml 
+   10  cd beakerx/beakerx
+   11  pip install -r requirements.txt --verbose
+   12  conda install -r requirements.txt --verbose
+   13  conda install requirements.txt
+   14  curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+   15  apt-get install gnupg
+   16  apt-get install gnupg2
+   17  apt-get install gpgv
+   18  apt-get install gnupg
+   19  curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+   20  echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+   21  apt update && sudo apt install yarn
+   22  apt-get install gnupg2
+   23  apt update && sudo apt install yarn
+   24  apt-get update
+   25  apt-get install gnupg2
+   26  apt-get install gnupg
+   27  curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+   28  echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+   29  apt update && apt install yarn
+   30  ls
+   31  beakerx install
+   32  nano requirements.txt 
+   33  ls
+   34  nano requirements.txt 
+   35  pip install -r requirements.txt --verbose
+   36  ls
+   37  beakerx install
+   38  pip install beakerx
+   39  beakerx install
+   40  jupyter labextension install @jupyter-widgets/jupyterlab-manager
+   41  (cd js/lab; jupyter labextension install . --no-build)
+   42  (cd js/lab-theme-dark; jupyter labextension install . --no-build)
+   43  ls
+   44  cd beakerx
+   45  ls
+   46  cd ..
+   47  ls
+   48  (cd js/lab; jupyter labextension install . --no-build)
+   49  (cd js/lab-theme-dark; jupyter labextension install . --no-build)
+   50  (cd js/lab-theme-light; jupyter labextension install . --no-build)ls
+   51  ls
+   52  cd js/lab
+   53  ls
+   54  cd ../lab-theme-dark/
+   55  jupyter labextension install .. --no-builds
+   56  jupyter labextension install . --no-builds
+   57  jupyter labextension install . --no-build
+   58  cd ../lab
+   59  jupyter labextension install . --no-build
+   60  cd ../lab-theme-light/
+   61  jupyter labextension install . --no-build
+   62  nano /tmp/jupyterlab-debug-v_mt2tw_.log
+   63  ls
+   64  cd ../..
+   65  ls
+   66  jupyter lab build
+   67  jupyter notebook list
+   68  exit
+   69  ls -alh
+   70  exit
+   71  jupyter notebook list
+   72  conda install -c conda-forge spacy
+   73  conda install -c conda-forge spacy-lookups-data
+   74  python -m spacy download en_core_web_sm
+   75  python -m spacy download en_core_web_lg
+   76  conda install -c conda-forge gensim
+   77  conda install -y -c conda-forge fasttext
+   78  conda install -y -c pytorch pytorch
+   79  conda install -y pytorch torchvision cpuonly -c pytorch
+   80  ls -alh
+   81  ls work
+   82  ls PERSONAL/
+   83  ls
+   84  ls work
+   85  ls
+   86  mv work/ tmp/
+   87  ls
+   88  ls tmp
+   89  ls tmp/work/
+   90  ls
+   91  exit
+   92  history > installs.txt
