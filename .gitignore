@@ -1,3 +1,6 @@
 spark-warehouse/*
 Data/*
 .ipynb_checkpoints/*
+Secret*
+.DS_Store/*
+__pycache__/*
