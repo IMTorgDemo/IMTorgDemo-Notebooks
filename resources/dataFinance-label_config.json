@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "text": "False",
+    "prefixKey": null,
+    "suffixKey": "0",
+    "backgroundColor": "#FF6F00",
+    "textColor": "#ffffff"
+  },
+  {
+    "id": 2,
+    "text": "True",
+    "prefixKey": null,
+    "suffixKey": "1",
+    "backgroundColor": "#8BC34A",
+    "textColor": "#ffffff"
+  }
+]
